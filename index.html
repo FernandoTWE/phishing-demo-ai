@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subir Archivos - Modern Card</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen">
+  <div class="backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-xl" id="uploadCard">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Sube tus Archivos</h2>
+    <p class="text-gray-500 text-center mb-6">Puedes subir imágenes, documentos de texto o tomar una foto</p>
+
+    <!-- Switch para seleccionar tipo de subida -->
+    <div class="flex items-center justify-center mb-6">
+      <label class="inline-flex items-center mr-4">
+        <input type="radio" name="uploadType" value="image" class="form-radio text-blue-600" checked>
+        <span class="ml-2 text-gray-700">Subir Imagen</span>
+      </label>
+      <label class="inline-flex items-center mr-4">
+        <input type="radio" name="uploadType" value="eml" class="form-radio text-blue-600">
+        <span class="ml-2 text-gray-700">Subir EML</span>
+      </label>
+      <label class="inline-flex items-center">
+        <input type="radio" name="uploadType" value="text" class="form-radio text-blue-600">
+        <span class="ml-2 text-gray-700">Subir Texto</span>
+      </label>
+    </div>
+
+    <form id="uploadForm" class="space-y-4">
+      <div id="fileUploadContainer" class="flex items-center justify-center w-full">
+        <label for="fileUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+            <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V12a4 4 0 018 0v4m5 0a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 018 0v4" /></svg>
+            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click para subir</span> o arrastra un archivo</p>
+            <p class="text-xs text-gray-500">PNG, JPG, EML o TXT</p>
+          </div>
+          <input id="fileUpload" type="file" accept=".jpg,.jpeg,.png,.eml,.txt" class="hidden" capture="environment" />
+        </label>
+      </div>
+
+      <div id="textUploadContainer" class="flex items-center justify-center w-full hidden">
+        <textarea id="textUpload" rows="4" placeholder="Pega tu texto aquí..." class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+      </div>
+
+      <div class="flex justify-center">
+        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Subir Archivo</button>
+      </div>
+    </form>
+
+    <div id="uploadResult" class="mt-4 text-center text-gray-700"></div>
+  </div>
+
+  <div id="analyzingCard" class="hidden backdrop-blur-sm bg-white/30 rounded-lg shadow-lg p-8 w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4 text-center text-gray-800">Analizando...</h2>
+    <p class="text-gray-500 text-center">Por favor, espera mientras procesamos tu solicitud.</p>
+    <div class="loader mx-auto mt-4 w-10 h-10 border-4 border-blue-500 border-solid border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <script>
+    document.querySelectorAll('input[name="uploadType"]').forEach((elem) => {
+      elem.addEventListener('change', function () {
+        const fileUploadContainer = document.getElementById('fileUploadContainer');
+        const textUploadContainer = document.getElementById('textUploadContainer');
+        if (this.value === 'image' || this.value === 'eml') {
+          fileUploadContainer.classList.remove('hidden');
+          textUploadContainer.classList.add('hidden');
+        } else if (this.value === 'text') {
+          fileUploadContainer.classList.add('hidden');
+          textUploadContainer.classList.remove('hidden');
+        }
+      });
+    });
+
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('fileUpload');
+      const textInput = document.getElementById('textUpload');
+
+      if (fileInput.files.length === 0 && textInput.value.trim() === '') {
+        return; // No realizar ninguna acción si no hay archivos ni texto
+      }
+
+      const formData = new FormData();
+      const requestId = Date.now();
+      const fileType = document.querySelector('input[name="uploadType"]:checked').value;
+      const language = 'es';
+      const segment = 'residencial';
+
+      formData.append('requestId', requestId);
+      formData.append('fileType', fileType);
+      formData.append('language', language);
+      formData.append('segment', segment);
+
+      if (fileType === 'image' || fileType === 'eml') {
+        formData.append('file', fileInput.files[0]);
+      } else if (fileType === 'text') {
+        formData.append('text', textInput.value.trim());
+      }
+
+      let requestOptions = {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      };
+
+      // Sustituir el formulario por un card de análisis
+      document.getElementById('uploadCard').classList.add('hidden');
+      document.getElementById('analyzingCard').classList.remove('hidden');
+
+      fetch('https://n8n.nuvaweb.com/webhook/c632fddb-eb30-4c03-ab1d-2795850bcb9d', requestOptions)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+          }
+          return response.text(); // Tomamos la respuesta como texto
+        })
+        .then(text => {
+          // Si la respuesta es un texto plano y no JSON, simplemente lo manejamos
+          console.log("Respuesta del webhook:", text); // Debugging output
+          
+          // Intentar obtener los resultados después de un retardo de 20 segundos
+          const checkResults = () => {
+            fetch(`https://4bda4.twidget.io/requestid?requestId=${requestId}`) // Llamada a la API
+              .then(response => {
+                if (response.status === 200) {
+                  return response.json();
+                } 
+              })
+              .then(result => {
+                const iaAnalisis = result.iaAnalisis; // Obtener iaAnalisis del resultado
+                localStorage.setItem('iaAnalisis', iaAnalisis); // Almacenar iaAnalisis
+                window.location.href = 'resultados.html';
+              })
+              .catch(() => {
+                setTimeout(checkResults, 5000); // Reintentar cada 10 segundos
+              });
+          };
+
+          setTimeout(checkResults, 5000); // Llamar a verificar resultados después de 20 segundos
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    });
+  </script>
+  
+  <style>
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</body>
+</html>
