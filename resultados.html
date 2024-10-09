@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultados - Análisis de Archivos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen flex-col">
+  <!-- Card Principal -->
+  <div class="backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-2xl">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Resultados del Análisis</h2>
+    <div id="resultSummary" class="rounded-lg p-4 text-gray-700">
+      <!-- Aquí se mostrará el resumen del análisis -->
+      <p>Cargando resultados...</p>
+    </div>
+  </div>
+
+  <!-- Botón para volver atrás -->
+  <div class="mt-6">
+    <button onclick="history.back()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out">
+      Volver
+    </button>
+  </div>
+
+  <script>
+    // Obtener el análisis del localStorage
+    const resultSummary = document.getElementById('resultSummary');
+    const iaAnalisis = localStorage.getItem('iaAnalisis');
+
+    if (iaAnalisis) {
+      resultSummary.innerHTML = `<p>Resumen del Análisis: ${iaAnalisis}</p>`;
+      // Limpia el localStorage si no lo necesitas más
+      localStorage.removeItem('iaAnalisis');
+    } else {
+      resultSummary.innerHTML = '<p>Error: no se encontraron resultados para mostrar.</p>';
+    }
+  </script>
+</body>
+</html>
