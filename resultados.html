@@ -2,38 +2,214 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Resultados - Análisis de Archivos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resultados del Análisis</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen flex-col">
-  <!-- Card Principal -->
-  <div class="backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-2xl">
-    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Resultados del Análisis</h2>
-    <div id="resultSummary" class="rounded-lg p-4 text-gray-700">
-      <!-- Aquí se mostrará el resumen del análisis -->
-      <p>Cargando resultados...</p>
+<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex flex-col items-center min-h-screen py-6">
+  <div class="w-full max-w-5xl bg-white/70 backdrop-blur-lg border border-indigo-500/30 rounded-lg shadow-lg p-8">
+
+    <!-- Encabezado -->
+    <div class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-gray-800">Informe de Análisis de tu Correo</h1>
+      <p class="text-gray-600 mt-2">Aquí encontrarás un resumen del análisis realizado a tu correo electrónico.</p>
+    </div>
+
+    <!-- Resumen del Correo -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800">Resumen del Correo</h2>
+      <p id="emailSummary" class="text-gray-700 mt-4"></p>
+    </div>
+
+    <!-- Análisis General -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800">Análisis General</h2>
+      <p id="overallAnalysis" class="text-gray-700 mt-4"></p>
+    </div>
+
+    <!-- Análisis de Riesgo -->
+    <div id="riskAnalysis" class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800">Análisis de Riesgo</h2>
+      <div class="mt-4 flex items-center">
+        <div id="riskBadge" class="px-4 py-2 rounded-full text-white font-semibold mr-4"></div>
+        <p id="riskDescription" class="text-gray-700"></p>
+      </div>
+    </div>
+
+    <!-- Análisis Detallado (Escala NIST Phish) -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800">Análisis Detallado</h2>
+      <p class="text-gray-600 mt-2">Basado en la escala NIST Phish, hemos evaluado el correo en las siguientes categorías:</p>
+
+      <!-- Señales Detectadas -->
+      <div class="mt-6">
+        <h3 class="text-xl font-semibold text-gray-800">Señales Detectadas en el Correo</h3>
+        <p id="cuesDescription" class="text-gray-700 mt-2"></p>
+        <!-- Representación visual -->
+        <div class="mt-4">
+          <div class="w-full bg-gray-200 rounded-full h-4">
+            <div id="cuesBar" class="h-4 rounded-full" style="width: 0%;"></div>
+          </div>
+          <p id="cuesCategory" class="text-gray-700 mt-2"></p>
+        </div>
+      </div>
+
+      <!-- Relevancia con tu Contexto -->
+      <div class="mt-6">
+        <h3 class="text-xl font-semibold text-gray-800">Relevancia con tu Contexto</h3>
+        <p id="premiseDetails" class="text-gray-700 mt-2"></p>
+        <!-- Representación visual -->
+        <div class="mt-4">
+          <div class="w-full bg-gray-200 rounded-full h-4">
+            <div id="premiseBar" class="h-4 rounded-full" style="width: 0%;"></div>
+          </div>
+          <p id="premiseCategory" class="text-gray-700 mt-2"></p>
+        </div>
+      </div>
+
+      <!-- Nivel de Dificultad para Detectar Phishing -->
+      <div class="mt-6">
+        <h3 class="text-xl font-semibold text-gray-800">Nivel de Dificultad para Detectar Phishing</h3>
+        <p id="detectionDescription" class="text-gray-700 mt-2"></p>
+        <!-- Representación visual -->
+        <div class="mt-4">
+          <div class="w-full bg-gray-200 rounded-full h-4">
+            <div id="detectionBar" class="h-4 rounded-full" style="width: 0%;"></div>
+          </div>
+          <p id="detectionCategory" class="text-gray-700 mt-2"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recomendaciones -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-semibold text-gray-800">Recomendaciones</h2>
+      <ul id="recommendationsList" class="list-disc list-inside text-gray-700 mt-4 space-y-2"></ul>
+    </div>
+
+    <!-- Botón para volver al inicio -->
+    <div class="text-center">
+      <button onclick="window.location.href='index.html'" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out">
+        Volver al Inicio
+      </button>
     </div>
   </div>
 
-  <!-- Botón para volver atrás -->
-  <div class="mt-6">
-<button onclick="window.location.href='https://fernandotwe.github.io/phishing-demo-ai/'" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out">
-  Ir a la Demostración
-</button>
-  </div>
-
   <script>
-    // Obtener el análisis del localStorage
-    const resultSummary = document.getElementById('resultSummary');
-    const iaAnalisis = localStorage.getItem('iaAnalisis');
+    const analysisResult = JSON.parse(localStorage.getItem('analysisResult'));
 
-    if (iaAnalisis) {
-      resultSummary.innerHTML = `<p>Resumen del Análisis: ${iaAnalisis}</p>`;
-      // Limpia el localStorage si no lo necesitas más
-      localStorage.removeItem('iaAnalisis');
+    if (analysisResult) {
+      // Resumen del Correo
+      document.getElementById('emailSummary').innerText = analysisResult.emailSummary || 'No disponible';
+
+      // Análisis General
+      document.getElementById('overallAnalysis').innerText = analysisResult.overallAnalysis || 'No disponible';
+
+      // Análisis de Riesgo
+      const riskLevelText = analysisResult.riskPhishing.riskLevel || 'No disponible';
+      const riskDescription = analysisResult.riskPhishing.riskDescription || 'No disponible';
+      document.getElementById('riskDescription').innerText = riskDescription;
+
+      const riskBadge = document.getElementById('riskBadge');
+      riskBadge.innerText = riskLevelText;
+
+      // Color del riesgo
+      let riskColor;
+      if (riskLevelText.includes('bajo')) {
+        riskColor = 'bg-green-500';
+      } else if (riskLevelText.includes('moderado')) {
+        riskColor = 'bg-yellow-500';
+      } else if (riskLevelText.includes('alto')) {
+        riskColor = 'bg-red-500';
+      } else {
+        riskColor = 'bg-gray-500';
+      }
+      riskBadge.classList.add(riskColor);
+
+      // Señales Detectadas
+      const cuesCategory = analysisResult.nistPhishScale.cue_category.category || 'No disponible';
+      const cuesDetails = analysisResult.nistPhishScale.cue_category.cue_details || '';
+      document.getElementById('cuesCategory').innerText = `Categoría: ${cuesCategory}`;
+      document.getElementById('cuesDescription').innerText = cuesDetails;
+
+      // Barra de señales
+      const cuesBar = document.getElementById('cuesBar');
+      let cuesPercentage;
+      let cuesColor;
+      const totalCueCount = analysisResult.nistPhishScale.cue_category.total_cue_count || 0;
+      cuesPercentage = (totalCueCount / 10) * 100 + '%';
+      if (totalCueCount <= 3) {
+        cuesColor = 'bg-green-500';
+      } else if (totalCueCount <= 6) {
+        cuesColor = 'bg-yellow-500';
+      } else {
+        cuesColor = 'bg-red-500';
+      }
+      cuesBar.style.width = cuesPercentage;
+      cuesBar.classList.add(cuesColor);
+
+      // Relevancia con tu Contexto
+      const premiseCategory = analysisResult.nistPhishScale.premise_alignment.category || 'No disponible';
+      const premiseDetails = analysisResult.nistPhishScale.premise_alignment.premise_details || '';
+      document.getElementById('premiseCategory').innerText = `Categoría: ${premiseCategory}`;
+      document.getElementById('premiseDetails').innerText = premiseDetails;
+
+      // Barra de relevancia
+      const premiseBar = document.getElementById('premiseBar');
+      let premisePercentage;
+      let premiseColor;
+      const premiseScore = analysisResult.nistPhishScale.premise_alignment.score || 0;
+      premisePercentage = (premiseScore / 5) * 100 + '%';
+      if (premiseScore <= 2) {
+        premiseColor = 'bg-red-500';
+      } else if (premiseScore <= 4) {
+        premiseColor = 'bg-yellow-500';
+      } else {
+        premiseColor = 'bg-green-500';
+      }
+      premiseBar.style.width = premisePercentage;
+      premiseBar.classList.add(premiseColor);
+
+      // Nivel de Dificultad para Detectar Phishing
+      const detectionCategory = analysisResult.nistPhishScale.detection_difficulty.category || 'No disponible';
+      const detectionDescription = analysisResult.nistPhishScale.detection_difficulty.description || '';
+      document.getElementById('detectionCategory').innerText = `Categoría: ${detectionCategory}`;
+      document.getElementById('detectionDescription').innerText = detectionDescription;
+
+      // Barra de dificultad
+      const detectionBar = document.getElementById('detectionBar');
+      let detectionPercentage;
+      let detectionColor;
+      if (detectionCategory.includes('Muy difícil')) {
+        detectionPercentage = '80%';
+        detectionColor = 'bg-red-500';
+      } else if (detectionCategory.includes('Moderadamente difícil')) {
+        detectionPercentage = '60%';
+        detectionColor = 'bg-yellow-500';
+      } else if (detectionCategory.includes('Menos difícil')) {
+        detectionPercentage = '30%';
+        detectionColor = 'bg-green-500';
+      } else {
+        detectionPercentage = '50%';
+        detectionColor = 'bg-gray-500';
+      }
+      detectionBar.style.width = detectionPercentage;
+      detectionBar.classList.add(detectionColor);
+
+      // Recomendaciones
+      const recommendationsList = document.getElementById('recommendationsList');
+      recommendationsList.innerHTML = '';
+      analysisResult.recomendation.forEach(rec => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${rec.recommendation_title}</strong>: ${rec.recommendation_detail}`;
+        recommendationsList.appendChild(li);
+      });
+
+      // Limpiar el almacenamiento local
+      localStorage.removeItem('analysisResult');
     } else {
-      resultSummary.innerHTML = '<p>Error: no se encontraron resultados para mostrar.</p>';
+      const resultsContainer = document.querySelector('.results-container');
+      resultsContainer.innerHTML = '<p class="text-center text-red-500">Error: no se encontraron resultados para mostrar.</p>';
     }
   </script>
 </body>

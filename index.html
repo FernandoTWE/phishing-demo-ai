@@ -3,158 +3,221 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Subir Archivos - Modern Card</title>
+  <title>Análisis de Correos Electrónicos</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .context-button {
+      flex: 1;
+      margin: 0 4px;
+      padding: 12px;
+      background-color: #f0f0f0;
+      color: #333;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    
+    .context-button:hover {
+      background-color: #e0e0e0;
+    }
+
+    .context-button.selected {
+      background-color: #add8e6;
+      border-color: #007bff;
+      color: black;
+    }
+
+    input[type="checkbox"] {
+      display: none;
+    }
+  </style>
 </head>
-<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen">
-  <div class="backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-xl" id="uploadCard">
-    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Sube tus Archivos</h2>
-    <p class="text-gray-500 text-center mb-6">Puedes subir imágenes, documentos de texto o tomar una foto</p>
-
-    <!-- Switch para seleccionar tipo de subida -->
-    <div class="flex items-center justify-center mb-6">
-      <label class="inline-flex items-center mr-4">
-        <input type="radio" name="uploadType" value="image" class="form-radio text-blue-600" checked>
-        <span class="ml-2 text-gray-700">Subir Imagen</span>
-      </label>
-      <label class="inline-flex items-center mr-4">
-        <input type="radio" name="uploadType" value="eml" class="form-radio text-blue-600">
-        <span class="ml-2 text-gray-700">Subir EML</span>
-      </label>
-      <label class="inline-flex items-center">
-        <input type="radio" name="uploadType" value="text" class="form-radio text-blue-600">
-        <span class="ml-2 text-gray-700">Subir Texto</span>
-      </label>
-    </div>
-
-    <form id="uploadForm" class="space-y-4">
-      <div id="fileUploadContainer" class="flex items-center justify-center w-full">
-        <label for="fileUpload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen relative">
+  
+  <div id="uploadModal" class="backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-2xl z-10">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Analiza tu Correo Electrónico</h2>
+    <p class="text-gray-500 text-center mb-6">Sube una imagen, un archivo EML, pega el contenido de tu correo o toma una foto</p>
+    <form id="uploadForm" class="space-y-6">
+      <div class="upload-area flex flex-col items-center justify-center w-full">
+        <label for="fileInput" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
           <div class="flex flex-col items-center justify-center pt-5 pb-6">
-            <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V12a4 4 0 018 0v4m5 0a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 018 0v4" /></svg>
-            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click para subir</span> o arrastra un archivo</p>
-            <p class="text-xs text-gray-500">PNG, JPG, EML o TXT</p>
+            <svg aria-hidden="true" class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V12a4 4 0 018 0v4m5 0a2 2 0 01-2 2H6a2 2 0 01-2-2v-4a4 4 0 018 0v4"/>
+            </path>
+            </svg>
+            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Haz clic para subir</span> o arrastra archivos</p>
+            <p class="text-xs text-gray-500">Sube un archivo de imagen, .eml o .msg</p>
           </div>
-          <input id="fileUpload" type="file" accept=".jpg,.jpeg,.png,.eml,.txt" class="hidden" capture="environment" />
+          <input id="fileInput" type="file" accept=".jpg,.jpeg,.png,.eml,.msg" capture="environment" multiple class="hidden"/>
         </label>
+        <p class="text-gray-500 my-4">O</p>
+        <textarea id="textInput" rows="4" placeholder="O pega el contenido de tu correo aquí..." class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
       </div>
-
-      <div id="textUploadContainer" class="flex items-center justify-center w-full hidden">
-        <textarea id="textUpload" rows="4" placeholder="Pega tu texto aquí..." class="w-full p-4 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
-      </div>
-
       <div class="flex justify-center">
-        <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Subir Archivo</button>
+        <button type="button" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onclick="showContextModal()">Siguiente</button>
       </div>
     </form>
-
-    <div id="uploadResult" class="mt-4 text-center text-gray-700"></div>
   </div>
 
-  <div id="analyzingCard" class="hidden backdrop-blur-sm bg-white/30 rounded-lg shadow-lg p-8 w-full max-w-md">
-    <h2 class="text-xl font-semibold mb-4 text-center text-gray-800">Analizando...</h2>
-    <p class="text-gray-500 text-center">Por favor, espera mientras procesamos tu solicitud.</p>
-    <div class="loader mx-auto mt-4 w-10 h-10 border-4 border-blue-500 border-solid border-t-transparent rounded-full animate-spin"></div>
+  <div id="contextModal" class="hidden backdrop-blur-lg bg-white/50 border border-indigo-500/30 rounded-lg shadow-lg p-8 w-full max-w-2xl z-10">
+    <h2 class="text-2xl font-semibold mb-4 text-center text-gray-800">Contexto del Correo</h2>
+    <div class="space-y-4">
+      <!-- Context Options -->
+      <div>
+        <label class="block text-gray-600 mb-2">¿Este correo está relacionado con tu trabajo o es de carácter personal?</label>
+        <div class="flex justify-around">
+          <label class="context-button" onclick="toggleCheckbox('contextTrabajo')">
+            <input type="checkbox" id="contextTrabajo" onchange="setContext('trabajo', this)" /> 
+            Relacionado con mi trabajo
+          </label>
+          <label class="context-button" onclick="toggleCheckbox('contextPersonal')">
+            <input type="checkbox" id="contextPersonal" onchange="setContext('personal', this)" />
+            De carácter personal
+          </label>
+          <label class="context-button" onclick="toggleCheckbox('contextNoSeguro')">
+            <input type="checkbox" id="contextNoSeguro" onchange="setContext('no-seguro', this)" />
+            No estoy seguro
+          </label>
+        </div>
+      </div>
+      <!-- Temporal Context Options -->
+      <div>
+        <label class="block text-gray-600 mb-2">¿El correo parece relacionado con algún evento reciente?</label>
+        <div class="flex justify-around">
+          <label class="context-button" onclick="toggleCheckbox('temporalCoincide')">
+            <input type="checkbox" id="temporalCoincide" onchange="setTemporalContext('coincide', this)" />
+            Sí, coincide
+          </label>
+          <label class="context-button" onclick="toggleCheckbox('temporalSinRelacion')">
+            <input type="checkbox" id="temporalSinRelacion" onchange="setTemporalContext('sin-relacion', this)" />
+            No, no hay relación
+          </label>
+          <label class="context-button" onclick="toggleCheckbox('temporalNoSeguro')">
+            <input type="checkbox" id="temporalNoSeguro" onchange="setTemporalContext('no-seguro', this)" />
+            No estoy seguro
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-center mt-6">
+        <button type="button" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2" onclick="submitForm()">Analizar Correo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="analyzingCard" class="hidden fixed inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm z-20">
+    <div class="text-center">
+      <h2 class="text-xl font-semibold mb-4 text-gray-800">Analizando...</h2>
+      <p id="analyzingText" class="text-gray-500">Por favor, espera mientras procesamos tu solicitud.</p>
+      <div class="loader mx-auto mt-4 w-10 h-10 border-4 border-blue-500 border-solid border-t-transparent rounded-full animate-spin"></div>
+    </div>
   </div>
 
   <script>
-    document.querySelectorAll('input[name="uploadType"]').forEach((elem) => {
-      elem.addEventListener('change', function () {
-        const fileUploadContainer = document.getElementById('fileUploadContainer');
-        const textUploadContainer = document.getElementById('textUploadContainer');
-        if (this.value === 'image' || this.value === 'eml') {
-          fileUploadContainer.classList.remove('hidden');
-          textUploadContainer.classList.add('hidden');
-        } else if (this.value === 'text') {
-          fileUploadContainer.classList.add('hidden');
-          textUploadContainer.classList.remove('hidden');
+    let contextType = '';
+    let temporalContext = '';
+
+    const showContextModal = () => {
+      const fileInput = document.getElementById('fileInput');
+      const textInput = document.getElementById('textInput').value.trim();
+
+      if ((fileInput.files.length === 0 && textInput === '') || (fileInput.files.length > 0 && textInput !== '')) {
+        alert('Por favor, sube un archivo o pega el contenido del correo, pero no ambos.');
+        return;
+      }
+
+      document.getElementById('uploadModal').classList.add('hidden');
+      document.getElementById('contextModal').classList.remove('hidden');
+    };
+
+    const toggleCheckbox = (id) => {
+      const checkbox = document.getElementById(id);
+      checkbox.checked = !checkbox.checked;
+    };
+
+    const setContext = (value, checkbox) => {
+      contextType = value;
+      updateSelectedButton('context', checkbox);
+    };
+
+    const setTemporalContext = (value, checkbox) => {
+      temporalContext = value;
+      updateSelectedButton('temporal', checkbox);
+    };
+
+    const updateSelectedButton = (type, checkbox) => {
+      const contextButtons = document.querySelectorAll(`label.context-button`);
+      contextButtons.forEach(button => {
+        if (button.querySelector('input[type="checkbox"]').checked) {
+          button.classList.add('selected');
+        } else {
+          button.classList.remove('selected');
         }
       });
-    });
+    };
 
-    document.getElementById('uploadForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const fileInput = document.getElementById('fileUpload');
-      const textInput = document.getElementById('textUpload');
-
-      if (fileInput.files.length === 0 && textInput.value.trim() === '') {
-        return; // No realizar ninguna acción si no hay archivos ni texto
-      }
-
+    const submitForm = () => {
+      const fileInput = document.getElementById('fileInput');
+      const textInput = document.getElementById('textInput').value.trim();
       const formData = new FormData();
       const requestId = Date.now();
-      const fileType = document.querySelector('input[name="uploadType"]:checked').value;
-      const language = 'es';
-      const segment = 'residencial';
 
-      formData.append('requestId', requestId);
-      formData.append('fileType', fileType);
-      formData.append('language', language);
-      formData.append('segment', segment);
+      let contentType = '';
 
-      if (fileType === 'image' || fileType === 'eml') {
-        formData.append('file', fileInput.files[0]);
-      } else if (fileType === 'text') {
-        formData.append('text', textInput.value.trim());
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        contentType = file.name.endsWith('.eml') || file.name.endsWith('.msg') ? 'emailFile' : 'imageFile';
+        formData.append('file', file);
+      } else {
+        contentType = 'text';
+        formData.append('text', textInput);
       }
 
-      let requestOptions = {
+      formData.append('requestId', requestId);
+      formData.append('language', 'es');
+      formData.append('segment', 'residencial');
+      formData.append('contentType', contentType);
+      formData.append('contextType', contextType);
+      formData.append('temporalContext', temporalContext);
+
+      document.getElementById('contextModal').classList.add('hidden');
+      document.getElementById('analyzingCard').classList.remove('hidden');
+
+      const requestOptions = {
         method: 'POST',
         body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       };
-
-      // Sustituir el formulario por un card de análisis
-      document.getElementById('uploadCard').classList.add('hidden');
-      document.getElementById('analyzingCard').classList.remove('hidden');
 
       fetch('https://n8n.nuvaweb.com/webhook/c632fddb-eb30-4c03-ab1d-2795850bcb9d', requestOptions)
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-          }
-          return response.text(); // Tomamos la respuesta como texto
+          if (!response.ok) throw new Error('Error en la respuesta del servidor');
+          return response.text();
         })
         .then(text => {
-          // Si la respuesta es un texto plano y no JSON, simplemente lo manejamos
-          console.log("Respuesta del webhook:", text); // Debugging output
-          
-          // Intentar obtener los resultados después de un retardo de 20 segundos
-          const checkResults = () => {
-            fetch(`https://4bda4.twidget.io/requestid?requestId=${requestId}`) // Llamada a la API
-              .then(response => {
-                if (response.status === 200) {
-                  return response.json();
-                } 
-              })
-              .then(result => {
-                const iaAnalisis = result.iaAnalisis; // Obtener iaAnalisis del resultado
-                localStorage.setItem('iaAnalisis', iaAnalisis); // Almacenar iaAnalisis
-                window.location.href = 'resultados.html';
-              })
-              .catch(() => {
-                setTimeout(checkResults, 5000); // Reintentar cada 10 segundos
-              });
-          };
-
-          setTimeout(checkResults, 5000); // Llamar a verificar resultados después de 20 segundos
+          console.log("Respuesta del webhook:", text);
+          checkResults(requestId);
         })
         .catch(error => {
           console.error('Error:', error);
+          alert('Ocurrió un error al procesar tu solicitud. Por favor, intenta nuevamente.');
+          document.getElementById('analyzingCard').classList.add('hidden');
+          document.getElementById('uploadModal').classList.remove('hidden');
         });
-    });
+    };
+
+    function checkResults(requestId) {
+      fetch(`https://4bda4.twidget.io/requestid?requestId=${requestId}`)
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to fetch result');
+          return response.json();
+        })
+        .then(result => {
+          if (Object.keys(result).length === 0) throw new Error('Empty response');
+          localStorage.setItem('analysisResult', JSON.stringify(result));
+          window.location.href = 'resultados.html';
+        })
+        .catch(() => setTimeout(() => checkResults(requestId), 5000));
+    }
   </script>
-  
-  <style>
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .animate-spin {
-      animation: spin 1s linear infinite;
-    }
-  </style>
 </body>
 </html>

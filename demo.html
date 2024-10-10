@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resultados del Análisis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-indigo-100 via-purple-200 to-pink-100 flex items-center justify-center min-h-screen flex-col">
+  <!-- Contenedor de Resultados -->
+  <div id="results-container" class="results-container bg-white/70 backdrop-blur-lg border border-indigo-500/30 rounded-lg shadow-lg p-10 w-full max-w-4xl">
+    <h2 class="text-3xl font-semibold text-center mb-6 text-gray-800">Informe de Análisis del Correo</h2>
+    
+    <!-- Resumen del Correo -->
+    <div class="email-summary mb-8">
+      <h3 class="text-xl font-medium">Resumen del Correo:</h3>
+      <hr class="border-t-2 border-indigo-300 my-4">
+      <p id="emailSummary" class="text-gray-700 mt-4"></p>
+    </div>
+    
+    <!-- Análisis Global -->
+    <div class="overall-analysis mb-8">
+      <h3 class="text-xl font-medium">Análisis Global:</h3>
+      <hr class="border-t-2 border-indigo-300 my-4">
+      <p id="overallAnalysis" class="text-gray-700 mt-4"></p>
+    </div>
+    
+    <!-- Riesgo de Phishing -->
+    <div class="phishing-risk mb-8">
+      <h3 class="text-xl font-medium">Riesgo de Phishing:</h3>
+      <hr class="border-t-2 border-indigo-300 my-4">
+      <div class="risk-meter mt-4">
+        <!-- Visualización del Medidor de Riesgo -->
+        <div class="w-full bg-gray-200 rounded-full h-6">
+          <div id="riskMeterBar" class="h-6 rounded-full" style="width: 0%;"></div>
+        </div>
+        <p id="riskDescription" class="text-gray-700 mt-2"></p>
+      </div>
+    </div>
+    
+    <!-- Escala NIST de Phishing -->
+    <div class="nist-phish-scale mb-8">
+      <h3 class="text-xl font-medium">Escala NIST de Phishing:</h3>
+      <hr class="border-t-2 border-indigo-300 my-4">
+      <ul id="nistPhishDetails" class="list-disc list-inside text-gray-700 mt-4"></ul>
+    </div>
+    
+    <!-- Recomendaciones en Acordeón -->
+    <div class="recommendations">
+      <h3 class="text-xl font-medium mb-4">Recomendaciones:</h3>
+      <hr class="border-t-2 border-indigo-300 my-4">
+      <div id="accordion" class="accordion space-y-4">
+        <!-- Las recomendaciones serán cargadas dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Botón para volver al inicio -->
+  <div class="mt-6">
+    <button onclick="window.location.href='index.html'" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition duration-200 ease-in-out">
+      Página de Inicio
+    </button>
+  </div>
+
+  <script>
+    // JSON por defecto
+    const defaultAnalysis = {
+      "emailSummary": "El correo electrónico es un boletín informativo de Probely, enviado por Tiago Mendo, donde se destacan las últimas herramientas y mejoras en sus productos de ciberseguridad, especialmente en relación con la funcionalidad de Discovery para la identificación y catalogación de APIs y aplicaciones web.",
+      "overallAnalysis": "El análisis de riesgo indica una baja probabilidad (0/10) de que este correo sea un intento de phishing. Aunque se encontraron algunas características sospechosas, el contenido es relevante y se alinea con las prácticas laborales.",
+      "riskPhishing": {
+        "totalRiskScore": 0,
+        "riskLevel": "Low phishing risk",
+        "riskDescription": "El nivel de riesgo de phishing es Bajo. No se detectaron signos claros de riesgo."
+      },
+      "nistPhishScale": {
+        "cue_category": {
+          "total_cue_count": 2,
+          "category": "Pocos (más difícil)",
+          "cue_details": "Saludo genérico y ofertas demasiado buenas para ser verdad."
+        },
+        "premise_alignment": {
+          "score": 10,
+          "category": "Débil",
+          "premise_details": "Alineación débil con las prácticas laborales del destinatario."
+        },
+        "detection_difficulty": {
+          "category": "Moderadamente difícil",
+          "description": "El correo es difícil de detectar como phishing, aunque ligeramente menos que en otros casos."
+        }
+      },
+      "recomendation": [
+        {
+          "recommendation_title": "Verificar la Legitimidad de los Enlaces",
+          "recommendation_detail": "Asegúrate siempre de verificar la autenticidad de cualquier enlace incluido en correos electrónicos antes de hacer clic."
+        },
+        {
+          "recommendation_title": "Configurar la Autenticación de Dos Factores (2FA)",
+          "recommendation_detail": "Para incrementar la seguridad de tu cuenta, habilita la autenticación de dos factores en los servicios relacionados con la ciberseguridad."
+        },
+        {
+          "recommendation_title": "Mantenerse Informado sobre Ciberseguridad",
+          "recommendation_detail": "Participa en iniciativas de concienciación sobre ciberseguridad para aprender sobre las últimas tendencias y tácticas de phishing."
+        }
+      ]
+    };
+
+    // Obtener el análisis del archivo index.html o usar el JSON por defecto
+    fetch('index.html')
+      .then(response => response.text())
+      .then(data => {
+        // Extraer el JSON del archivo index.html (Simulando)
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data, 'text/html');
+        const jsonElement = doc.querySelector('#jsonData'); // Suponiendo que existe un elemento con este ID que tiene el JSON
+        const analysisResult = jsonElement ? JSON.parse(jsonElement.textContent) : defaultAnalysis;
+
+        // Rellenar los elementos HTML con la información del JSON
+        if (analysisResult) {
+          // Resumen del Correo
+          document.getElementById('emailSummary').textContent = analysisResult.emailSummary;
+          
+          // Análisis Global
+          document.getElementById('overallAnalysis').textContent = analysisResult.overallAnalysis;
+
+          // Riesgo de Phishing
+          const riskMeterBar = document.getElementById('riskMeterBar');
+          let riskLevel = analysisResult.riskPhishing.totalRiskScore;
+          let riskColor;
+          switch (analysisResult.riskPhishing.riskLevel) {
+            case 'High phishing risk':
+              riskLevel = '80%';
+              riskColor = 'bg-red-500';
+              break;
+            case 'Moderate phishing risk':
+              riskLevel = '50%';
+              riskColor = 'bg-yellow-500';
+              break;
+            case 'Low phishing risk':
+            default:
+              riskLevel = '20%';
+              riskColor = 'bg-green-500';
+          }
+          riskMeterBar.style.width = riskLevel;
+          riskMeterBar.classList.add(riskColor);
+          document.getElementById('riskDescription').textContent = analysisResult.riskPhishing.riskDescription;
+
+          // Escala NIST de Phishing
+          const nistPhishDetails = document.getElementById('nistPhishDetails');
+          nistPhishDetails.innerHTML = '';
+          nistPhishDetails.innerHTML += `<li><strong>Categoría de Cues:</strong> ${analysisResult.nistPhishScale.cue_category.category}, con un total de ${analysisResult.nistPhishScale.cue_category.total_cue_count} indicadores.</li>`;
+          nistPhishDetails.innerHTML += `<li><strong>Detalles de los Cues:</strong> ${analysisResult.nistPhishScale.cue_category.cue_details}</li>`;
+          nistPhishDetails.innerHTML += `<li><strong>Alineación con la Premisa:</strong> ${analysisResult.nistPhishScale.premise_alignment.category}, puntuación de ${analysisResult.nistPhishScale.premise_alignment.score}.</li>`;
+          nistPhishDetails.innerHTML += `<li><strong>Dificultad de Detección:</strong> ${analysisResult.nistPhishScale.detection_difficulty.category} - ${analysisResult.nistPhishScale.detection_difficulty.description}</li>`;
+
+          // Recomendaciones
+          const accordion = document.getElementById('accordion');
+          accordion.innerHTML = '';
+          analysisResult.recomendation.forEach((rec, index) => {
+            accordion.innerHTML += `
+              <div class="accordion-item">
+                <button class="accordion-header bg-indigo-500 text-white font-medium p-4 rounded-lg w-full text-left focus:outline-none">
+                  ${rec.recommendation_title}
+                </button>
+                <div class="accordion-body mt-2 hidden">
+                  <p class="text-gray-700 p-4">${rec.recommendation_detail}</p>
+                </div>
+              </div>
+            `;
+          });
+
+          // Lógica para mostrar/ocultar el cuerpo del acordeón
+          document.querySelectorAll('.accordion-header').forEach(button => {
+            button.addEventListener('click', () => {
+              const accordionBody = button.nextElementSibling;
+              accordionBody.classList.toggle('hidden');
+            });
+          });
+        }
+      })
+      .catch(() => {
+        // En caso de error al cargar el JSON externo, usar el JSON por defecto
+        const analysisResult = defaultAnalysis;
+
+        // Rellenar los elementos HTML con la información del JSON por defecto
+        document.getElementById('emailSummary').textContent = analysisResult.emailSummary;
+        document.getElementById('overallAnalysis').textContent = analysisResult.overallAnalysis;
+
+        const riskMeterBar = document.getElementById('riskMeterBar');
+        let riskLevel = analysisResult.riskPhishing.totalRiskScore;
+        let riskColor = 'bg-green-500';
+        riskLevel = '20%';
+        riskMeterBar.style.width = riskLevel;
+        riskMeterBar.classList.add(riskColor);
+        document.getElementById('riskDescription').textContent = analysisResult.riskPhishing.riskDescription;
+
+        const nistPhishDetails = document.getElementById('nistPhishDetails');
+        nistPhishDetails.innerHTML = '';
+        nistPhishDetails.innerHTML += `<li><strong>Categoría de Cues:</strong> ${analysisResult.nistPhishScale.cue_category.category}, con un total de ${analysisResult.nistPhishScale.cue_category.total_cue_count} indicadores.</li>`;
+        nistPhishDetails.innerHTML += `<li><strong>Detalles de los Cues:</strong> ${analysisResult.nistPhishScale.cue_category.cue_details}</li>`;
+        nistPhishDetails.innerHTML += `<li><strong>Alineación con la Premisa:</strong> ${analysisResult.nistPhishScale.premise_alignment.category}, puntuación de ${analysisResult.nistPhishScale.premise_alignment.score}.</li>`;
+        nistPhishDetails.innerHTML += `<li><strong>Dificultad de Detección:</strong> ${analysisResult.nistPhishScale.detection_difficulty.category} - ${analysisResult.nistPhishScale.detection_difficulty.description}</li>`;
+
+        const accordion = document.getElementById('accordion');
+        accordion.innerHTML = '';
+        analysisResult.recomendation.forEach((rec, index) => {
+          accordion.innerHTML += `
+            <div class="accordion-item">
+              <button class="accordion-header bg-indigo-500 text-white font-medium p-4 rounded-lg w-full text-left focus:outline-none">
+                ${rec.recommendation_title}
+              </button>
+              <div class="accordion-body mt-2 hidden">
+                <p class="text-gray-700 p-4">${rec.recommendation_detail}</p>
+              </div>
+            </div>
+          `;
+        });
+
+        document.querySelectorAll('.accordion-header').forEach(button => {
+          button.addEventListener('click', () => {
+            const accordionBody = button.nextElementSibling;
+            accordionBody.classList.toggle('hidden');
+          });
+        });
+      });
+  </script>
+</body>
+</html>
