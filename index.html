@@ -188,7 +188,7 @@
         headers: { 'Accept': 'application/json' }
       };
 
-      fetch('https://n8n.nuvaweb.com/webhook/c632fddb-eb30-4c03-ab1d-2795850bcb9d', requestOptions)
+      fetch('https://n8n.nuvaweb.com/webhook-test/c632fddb-eb30-4c03-ab1d-2795850bcb9d', requestOptions)
         .then(response => {
           if (!response.ok) throw new Error('Error en la respuesta del servidor');
           return response.text();
