@@ -1,0 +1,18 @@
+---
+const segments = [
+  { value: 'residencial', name: 'Residencial' },
+  { value: 'pymes', name: 'Pymes' }
+];
+---
+
+<div class="flex items-center space-x-2">
+  <label for="segment" class="text-sm font-medium text-gray-700">Segmento:</label>
+  <select
+    id="segment"
+    class="block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+  >
+    {segments.map(segment => (
+      <option value={segment.value}>{segment.name}</option>
+    ))}
+  </select>
+</div>

@@ -1,0 +1,20 @@
+---
+interface Props {
+  title: string;
+  showHistoryLink?: boolean;
+  showNewAnalysisLink?: boolean;
+}
+
+const { title, showHistoryLink = false, showNewAnalysisLink = false } = Astro.props;
+
+import HistoryLink from '../navigation/HistoryLink.astro';
+import NewAnalysisLink from '../navigation/NewAnalysisLink.astro';
+---
+
+<div class="flex justify-between items-center mb-8">
+  <h1 class="text-3xl font-bold text-gray-900">{title}</h1>
+  <div class="flex space-x-4">
+    {showHistoryLink && <HistoryLink />}
+    {showNewAnalysisLink && <NewAnalysisLink />}
+  </div>
+</div>

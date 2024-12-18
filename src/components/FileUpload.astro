@@ -1,0 +1,40 @@
+---
+---
+<div class="relative border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors">
+  <input
+    type="file"
+    id="fileInput"
+    accept=".eml,.jpg,.jpeg,.png"
+    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+  />
+  <div class="space-y-4">
+    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    <div class="text-gray-600">
+      <p class="font-medium text-indigo-600 mb-2">
+        Haz click aquí para seleccionar archivos o arrástralos a esta zona
+      </p>
+      <p class="text-sm text-gray-500">
+        Puedes subir una imagen del correo o directamente el correo en formato .eml
+      </p>
+    </div>
+    <div class="text-xs text-gray-500 mt-2 italic">
+      (puedes exportar tus correos en este formato pulsando sobre el icono de 3 puntos que encontrarás junto al correo que quieras analizar y pulsando sobre "Descargar mensaje" o "Guardar como")
+    </div>
+  </div>
+</div>
+
+<div id="filePreview" class="hidden mt-4">
+  <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+    <div class="flex items-center space-x-3">
+      <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <span id="fileName" class="text-sm font-medium text-gray-900"></span>
+    </div>
+    <button type="button" id="removeFile" class="text-sm text-red-600 hover:text-red-800">
+      Eliminar
+    </button>
+  </div>
+</div>

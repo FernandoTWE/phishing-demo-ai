@@ -1,0 +1,90 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import FileUpload from '../components/FileUpload.astro';
+import TextInput from '../components/TextInput.astro';
+import ConsentCheckbox from '../components/ConsentCheckbox.astro';
+import AnalyzeButton from '../components/AnalyzeButton.astro';
+import LoadingState from '../components/LoadingState.astro';
+import LanguageSelector from '../components/LanguageSelector.astro';
+import SegmentSelector from '../components/SegmentSelector.astro';
+---
+
+<Layout title="Análisis de Correos Electrónicos">
+  <div class="fixed top-0 left-0 right-0 bg-white shadow-sm z-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex justify-end space-x-4">
+        <LanguageSelector />
+        <SegmentSelector />
+      </div>
+    </div>
+  </div>
+
+  <main class="min-h-screen bg-gradient-to-br from-indigo-100 to-white pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <Header />
+        <form id="analysisForm" class="space-y-8">
+          <FileUpload />
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-white text-gray-500">O</span>
+            </div>
+          </div>
+          <TextInput />
+          <ConsentCheckbox />
+          <AnalyzeButton />
+        </form>
+      </div>
+    </div>
+  </main>
+  <LoadingState />
+</Layout>
+
+<script>
+  import { handleAnalysisSubmission } from '../utils/analysisHandler';
+  import { validateForm } from '../utils/formValidation';
+  import { handleFileSelection, removeSelectedFile } from '../utils/fileHandlers';
+  import type { AnalysisFormData } from '../types/analysis';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('analysisForm') as HTMLFormElement;
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    const filePreview = document.getElementById('filePreview') as HTMLElement;
+    const fileName = document.getElementById('fileName') as HTMLElement;
+    const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
+    const removeFileBtn = document.getElementById('removeFile');
+    
+    let selectedFile: File | null = null;
+
+    fileInput?.addEventListener('change', (event) => {
+      selectedFile = handleFileSelection(event, fileName, filePreview, textInput);
+    });
+
+    removeFileBtn?.addEventListener('click', () => {
+      selectedFile = removeSelectedFile(fileInput, filePreview, textInput);
+    });
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData: AnalysisFormData = {
+        text: textInput.value,
+        language: (document.getElementById('language') as HTMLSelectElement).value,
+        segment: (document.getElementById('segment') as HTMLSelectElement).value,
+        file: selectedFile
+      };
+
+      const { isValid, error } = validateForm(formData);
+      if (!isValid) {
+        alert(error);
+        return;
+      }
+
+      await handleAnalysisSubmission(formData);
+    });
+  });
+</script>

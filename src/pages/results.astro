@@ -1,0 +1,75 @@
+---
+import Layout from '../layouts/Layout.astro';
+import RiskMeter from '../components/results/RiskMeter.astro';
+import AnalysisCard from '../components/results/AnalysisCard.astro';
+import RecommendationGrid from '../components/results/RecommendationGrid.astro';
+---
+
+<Layout title="Resultados del Análisis">
+  <main class="min-h-screen bg-gradient-to-br from-indigo-100 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Resultados del Análisis</h1>
+        <div class="flex space-x-4">
+          <a
+            href="/history"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Ver Histórico
+          </a>
+          <a
+            href="/"
+            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Nuevo Análisis
+          </a>
+        </div>
+      </div>
+
+      <div id="resultsContainer" class="space-y-8">
+        <!-- Los resultados se renderizarán aquí -->
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { displayAnalysisResults } from '../utils/resultsRenderer';
+  import { fetchAnalysisResult } from '../services/analysisService';
+
+  async function loadResults() {
+    const container = document.getElementById('resultsContainer');
+    if (!container) return;
+
+    try {
+      // Check if we're coming from history view
+      const selectedAnalysisId = localStorage.getItem('selectedAnalysisId');
+      if (selectedAnalysisId) {
+        const result = await fetchAnalysisResult(selectedAnalysisId);
+        if (result) {
+          displayAnalysisResults(result, container);
+          // Clear the selected analysis ID after loading
+          localStorage.removeItem('selectedAnalysisId');
+          return;
+        }
+      }
+
+      // If no selected analysis or it failed to load, try loading from analysisResult
+      const resultData = localStorage.getItem('analysisResult');
+      if (resultData) {
+        displayAnalysisResults(JSON.parse(resultData), container);
+      } else {
+        window.location.href = '/';
+      }
+    } catch (error) {
+      console.error('Error loading results:', error);
+      container.innerHTML = `
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <p class="text-red-600">Error al cargar los resultados. Por favor, intenta nuevamente.</p>
+        </div>
+      `;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadResults);
+</script>

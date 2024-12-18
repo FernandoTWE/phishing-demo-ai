@@ -1,0 +1,31 @@
+---
+interface Props {
+  score: number;
+}
+
+const { score } = Astro.props;
+---
+
+<div class="mb-6">
+  <div class="flex items-center justify-between mb-2">
+    <h2 class="text-lg font-semibold text-gray-900">Nivel de Riesgo</h2>
+    <span id="riskScore" class="text-lg font-bold"></span>
+  </div>
+  <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+    <div id="riskBar" class="h-full rounded-full transition-all duration-500"></div>
+  </div>
+</div>
+
+<script>
+  function getRiskColor(score: number): string {
+    if (score <= 4) return 'bg-green-500';
+    if (score <= 7) return 'bg-yellow-500';
+    return 'bg-red-500';
+  }
+
+  function getRiskText(score: number): string {
+    if (score <= 4) return 'Riesgo Bajo';
+    if (score <= 7) return 'Riesgo Medio';
+    return 'Riesgo Alto';
+  }
+</script>

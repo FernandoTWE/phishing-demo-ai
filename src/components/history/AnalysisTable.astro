@@ -1,0 +1,78 @@
+---
+---
+<div class="bg-white shadow-xl rounded-lg overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel de Riesgo</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200">
+        <!-- Los datos se insertarán dinámicamente -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  import { fetchAnalysisHistory } from '../../services/analysisService';
+  import { getRiskBadgeClass } from '../../utils/riskUtils';
+
+  async function loadHistoryData() {
+    const tableBody = document.getElementById('historyTableBody');
+    if (!tableBody) return;
+
+    try {
+      const history = await fetchAnalysisHistory();
+      
+      tableBody.innerHTML = history.map((item: any) => `
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            ${new Date(item.created_at).toLocaleString()}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">
+            ${item.alias || 'NoAlias'}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRiskBadgeClass(item.riskPhishing.totalRiskScore)}">
+              ${item.riskPhishing.totalRiskScore.toFixed(1)} - ${item.riskPhishing.riskLevel}
+            </span>
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm">
+            <button
+              data-request-id="${item.requestId}"
+              class="view-analysis-btn text-indigo-600 hover:text-indigo-900 font-medium"
+            >
+              Ver detalles
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('.view-analysis-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+          const requestId = (e.currentTarget as HTMLElement).dataset.requestId;
+          if (requestId) {
+            localStorage.setItem('selectedAnalysisId', requestId);
+            window.location.href = '/results';
+          }
+        });
+      });
+    } catch (error) {
+      console.error('Error loading history:', error);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+            Error al cargar el historial
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadHistoryData);
+</script>
