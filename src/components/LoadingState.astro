@@ -5,7 +5,7 @@
     <div class="text-center">
       <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
       <h2 class="text-xl font-semibold text-gray-900 mb-2">Analizando correo</h2>
-      <p class="text-gray-600">Por favor, espera mientras procesamos tu solicitud...</p>
+      <p id="loadingMessage" class="text-gray-600">Por favor, espera mientras procesamos tu solicitud...</p>
       <div class="mt-4">
         <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div class="h-full bg-indigo-600 rounded-full animate-pulse w-full"></div>
@@ -14,3 +14,50 @@
     </div>
   </div>
 </div>
+
+<script>
+  let dots = '';
+  let dotInterval: number;
+
+  export function updateLoadingMessage(message: string) {
+    const loadingMessage = document.getElementById('loadingMessage');
+    if (loadingMessage) {
+      loadingMessage.textContent = message;
+    }
+  }
+
+  // Start animated dots when overlay is shown
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const overlay = mutation.target as HTMLElement;
+        if (!overlay.classList.contains('hidden')) {
+          startDots();
+        } else {
+          stopDots();
+        }
+      }
+    });
+  });
+
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    observer.observe(loadingOverlay, { attributes: true });
+  }
+
+  function startDots() {
+    if (dotInterval) return;
+    
+    dotInterval = setInterval(() => {
+      dots = dots.length >= 3 ? '' : dots + '.';
+      updateLoadingMessage(`Por favor, espera mientras procesamos tu solicitud${dots}`);
+    }, 500);
+  }
+
+  function stopDots() {
+    if (dotInterval) {
+      clearInterval(dotInterval);
+      dotInterval = 0;
+    }
+  }
+</script>

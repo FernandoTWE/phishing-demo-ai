@@ -8,6 +8,7 @@ import AnalyzeButton from '../components/AnalyzeButton.astro';
 import LoadingState from '../components/LoadingState.astro';
 import LanguageSelector from '../components/LanguageSelector.astro';
 import SegmentSelector from '../components/SegmentSelector.astro';
+import Toast from '../components/Toast.astro';
 ---
 
 <Layout title="Análisis de Correos Electrónicos">
@@ -41,15 +42,17 @@ import SegmentSelector from '../components/SegmentSelector.astro';
       </div>
     </div>
   </main>
+  
   <LoadingState />
+  <Toast />
 </Layout>
 
 <script>
   import { handleAnalysisSubmission } from '../utils/analysisHandler';
   import { validateForm } from '../utils/formValidation';
   import { handleFileSelection, removeSelectedFile } from '../utils/fileHandlers';
+  import { logger } from '../utils/logger';
   import type { AnalysisFormData } from '../types/analysis';
-  import type { FileHandlerElements } from '../types/fileHandling';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('analysisForm') as HTMLFormElement;
@@ -61,21 +64,38 @@ import SegmentSelector from '../components/SegmentSelector.astro';
     
     let selectedFile: File | null = null;
 
-    const elements: FileHandlerElements = {
-      fileInput,
-      filePreview,
-      fileName,
-      textInput
-    };
-
+    // Handle file selection
     fileInput?.addEventListener('change', async (event) => {
-      selectedFile = await handleFileSelection(event, elements);
+      try {
+        selectedFile = await handleFileSelection(event, fileName, filePreview, textInput);
+        logger.log('info', 'File selection handled successfully');
+      } catch (error) {
+        logger.log('error', 'Error handling file selection', { error });
+        window.showToast('Error al seleccionar el archivo', 'error');
+      }
     });
 
+    // Handle file removal
     removeFileBtn?.addEventListener('click', () => {
-      selectedFile = removeSelectedFile(elements);
+      try {
+        selectedFile = removeSelectedFile(fileInput, filePreview, textInput);
+        logger.log('info', 'File removed successfully');
+      } catch (error) {
+        logger.log('error', 'Error removing file', { error });
+        window.showToast('Error al eliminar el archivo', 'error');
+      }
     });
 
+    // Handle text input character count
+    textInput?.addEventListener('input', (e) => {
+      const target = e.target as HTMLTextAreaElement;
+      const charCount = document.getElementById('charCount');
+      if (charCount) {
+        charCount.textContent = `${target.value.length}/4000 caracteres`;
+      }
+    });
+
+    // Handle form submission
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -88,11 +108,16 @@ import SegmentSelector from '../components/SegmentSelector.astro';
 
       const { isValid, error } = validateForm(formData);
       if (!isValid) {
-        alert(error);
+        window.showToast(error || 'Error en el formulario', 'error');
         return;
       }
 
-      await handleAnalysisSubmission(formData);
+      try {
+        await handleAnalysisSubmission(formData);
+      } catch (error) {
+        logger.log('error', 'Form submission failed', { error });
+        window.showToast('Error al enviar el análisis', 'error');
+      }
     });
   });
 </script>
