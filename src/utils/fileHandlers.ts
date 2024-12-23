@@ -1,82 +1,68 @@
 import { logger } from './logger';
-import { validateFile } from './fileValidator';
-import { getContentType } from './contentType';
 
-export async function handleFileSelection(
-  event: Event,
-  fileNameElement: HTMLElement,
-  filePreviewElement: HTMLElement,
-  textInputElement: HTMLTextAreaElement
-): Promise<File | null> {
-  const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];
-  
-  if (!file) {
-    logger.log('warn', 'No file selected');
-    return null;
-  }
-
-  logger.log('info', 'File selected', { 
-    name: file.name,
-    size: file.size,
-    type: file.type 
-  });
-
-  // Validate file
-  const validation = validateFile(file);
-  if (!validation.isValid) {
-    logger.log('error', 'File validation failed', { error: validation.error });
-    alert(validation.error);
-    return null;
+export async function processImage(file: File): Promise<File> {
+  // Si no es una imagen, devolver el archivo original
+  if (!file.type.startsWith('image/')) {
+    return file;
   }
 
   try {
-    // Preview image if it's an image file
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target?.result as string;
-        img.className = 'max-h-32 rounded-lg';
-        const previewContainer = document.getElementById('filePreviewImage');
-        if (previewContainer) {
-          previewContainer.innerHTML = '';
-          previewContainer.appendChild(img);
-        }
-      };
-      reader.readAsDataURL(file);
+    // Crear un objeto URL para la imagen
+    const imageUrl = URL.createObjectURL(file);
+    
+    // Cargar la imagen
+    const img = await loadImage(imageUrl);
+    
+    // Comprimir la imagen
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Calcular dimensiones manteniendo el aspect ratio
+    const maxSize = 1200;
+    let width = img.width;
+    let height = img.height;
+    
+    if (width > height && width > maxSize) {
+      height *= maxSize / width;
+      width = maxSize;
+    } else if (height > maxSize) {
+      width *= maxSize / height;
+      height = maxSize;
     }
-
-    // Update UI
-    fileNameElement.textContent = file.name;
-    filePreviewElement.classList.remove('hidden');
-    textInputElement.value = '';
-    textInputElement.disabled = true;
-
-    logger.log('info', 'File processed successfully');
-    return file;
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Dibujar imagen redimensionada
+    ctx?.drawImage(img, 0, 0, width, height);
+    
+    // Convertir a Blob con calidad reducida
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob(
+        (b) => resolve(b as Blob),
+        'image/jpeg',
+        0.7 // Calidad de compresión
+      );
+    });
+    
+    // Limpiar
+    URL.revokeObjectURL(imageUrl);
+    
+    // Crear nuevo archivo
+    return new File([blob], file.name, {
+      type: 'image/jpeg'
+    });
   } catch (error) {
-    logger.log('error', 'Error processing file', { error });
-    alert('Error al procesar el archivo. Por favor, inténtalo de nuevo.');
-    return null;
+    logger.log('error', 'Error processing image', { error });
+    return file; // En caso de error, devolver original
   }
 }
 
-export function removeSelectedFile(
-  fileInputElement: HTMLInputElement,
-  filePreviewElement: HTMLElement,
-  textInputElement: HTMLTextAreaElement
-): null {
-  logger.log('info', 'Removing selected file');
-  
-  fileInputElement.value = '';
-  filePreviewElement.classList.add('hidden');
-  textInputElement.disabled = false;
-  
-  const previewContainer = document.getElementById('filePreviewImage');
-  if (previewContainer) {
-    previewContainer.innerHTML = '';
-  }
-
-  return null;
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
 }
