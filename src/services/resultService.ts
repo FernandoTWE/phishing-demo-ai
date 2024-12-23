@@ -1,42 +1,32 @@
 import { API_CONFIG } from '../config/api';
 import { logger } from '../utils/logger';
-import { handleApiError } from '../utils/apiErrorHandler';
 import type { AnalysisResult } from '../types/analysis';
 
 const POLL_INTERVAL = 10000; // 10 seconds
 const MAX_RETRIES = 30; // 5 minutes total
 
-interface ApiResponse {
-  status: 'success' | 'error' | 'pending';
-  data?: AnalysisResult;
-  message?: string;
-}
-
-export async function checkResults(requestId: string): Promise<ApiResponse | null> {
+export async function checkResults(requestId: string): Promise<AnalysisResult | null> {
   try {
     const response = await fetch(`${API_CONFIG.ENDPOINTS.ANALYSIS_RESULT}?requestId=${requestId}`);
     
-    if (response.status === 404) {
-      logger.log('info', 'Results pending', { requestId });
-      return null;
-    }
-
     if (!response.ok) {
+      if (response.status === 404) {
+        logger.log('info', 'Results pending', { requestId });
+        return null;
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
     const result = await response.json();
     
-    if (!result) {
+    // If no result or empty object, consider it pending
+    if (!result || Object.keys(result).length === 0) {
       logger.log('info', 'No results yet', { requestId });
       return null;
     }
 
-    return {
-      status: result.status || 'pending',
-      data: result.data,
-      message: result.message
-    };
+    logger.log('info', 'Results received', { result });
+    return result;
   } catch (error) {
     logger.log('error', 'Results check failed', { error });
     return null;
@@ -48,7 +38,7 @@ export async function pollResults(requestId: string, retryCount = 0): Promise<vo
   const loadingMessage = document.getElementById('loadingMessage');
   
   if (retryCount >= MAX_RETRIES) {
-    loadingOverlay?.classList.add('hidden');
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
     window.showToast('El análisis está tardando más de lo esperado', 'error');
     return;
   }
@@ -63,38 +53,24 @@ export async function pollResults(requestId: string, retryCount = 0): Promise<vo
 
     const result = await checkResults(requestId);
     
-    if (!result) {
-      // Schedule next poll
-      setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
+    if (result) {
+      // Store result and redirect
+      localStorage.setItem('analysisResult', JSON.stringify({
+        ...result,
+        alias: result.alias || 'Análisis de correo'
+      }));
+      
+      if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+      }
+      
+      // Redirect to results page
+      window.location.href = '/results';
       return;
     }
 
-    switch (result.status) {
-      case 'success':
-        if (result.data) {
-          localStorage.setItem('analysisResult', JSON.stringify({
-            ...result.data,
-            alias: result.data.alias || 'Análisis de correo'
-          }));
-          loadingOverlay?.classList.add('hidden');
-          window.location.href = '/results';
-        }
-        break;
-        
-      case 'error':
-        loadingOverlay?.classList.add('hidden');
-        window.showToast(result.message || 'Error al procesar el análisis', 'error');
-        break;
-        
-      case 'pending':
-        // Continue polling
-        setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
-        break;
-        
-      default:
-        loadingOverlay?.classList.add('hidden');
-        window.showToast('Estado de análisis desconocido', 'error');
-    }
+    // Continue polling if no result
+    setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
   } catch (error) {
     logger.log('error', 'Polling error', { error, retryCount });
     // On error, continue polling
