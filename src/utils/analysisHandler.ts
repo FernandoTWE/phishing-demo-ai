@@ -9,7 +9,7 @@ async function createAnalysisPayload(formData: AnalysisFormData, requestId: stri
   const payload = new FormData();
   const contentInfo = formData.file ? getContentType(formData.file) : { type: 'message', mimeType: 'text/plain' };
 
-  // Add required fields
+  // Add metadata fields
   payload.append('requestId', requestId);
   payload.append('language', getLanguageCode(formData.language));
   payload.append('segment', formData.segment);
@@ -22,7 +22,8 @@ async function createAnalysisPayload(formData: AnalysisFormData, requestId: stri
     payload.append('file', formData.file);
     logger.log('info', 'File added to payload', { 
       name: formData.file.name,
-      type: contentInfo.type 
+      type: contentInfo.type,
+      mimeType: contentInfo.mimeType
     });
   } else if (formData.text) {
     payload.append('text', formData.text);
