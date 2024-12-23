@@ -5,7 +5,13 @@ import type { AnalysisResult } from '../types/analysis';
 const POLL_INTERVAL = 10000; // 10 seconds
 const MAX_RETRIES = 30; // 5 minutes total
 
-export async function checkResults(requestId: string): Promise<AnalysisResult | null> {
+interface ApiResponse {
+  status: 'success' | 'error';
+  message?: string;
+  data?: AnalysisResult;
+}
+
+export async function checkResults(requestId: string): Promise<ApiResponse | null> {
   try {
     const response = await fetch(`${API_CONFIG.ENDPOINTS.ANALYSIS_RESULT}?requestId=${requestId}`);
     
@@ -51,25 +57,31 @@ export async function pollResults(requestId: string, retryCount = 0): Promise<vo
       loadingMessage.textContent = `Analizando correo (${minutes}:${seconds.toString().padStart(2, '0')})...`;
     }
 
-    const result = await checkResults(requestId);
+    const response = await checkResults(requestId);
     
-    if (result) {
-      // Store result and redirect
-      localStorage.setItem('analysisResult', JSON.stringify({
-        ...result,
-        alias: result.alias || 'Análisis de correo'
-      }));
-      
+    if (response) {
       if (loadingOverlay) {
         loadingOverlay.classList.add('hidden');
       }
-      
-      // Redirect to results page
-      window.location.href = '/results';
-      return;
+
+      if (response.status === 'error') {
+        // Handle error status
+        window.showToast(response.message || 'Error en el análisis', 'error');
+        return;
+      }
+
+      if (response.status === 'success' && response.data) {
+        // Store result and redirect on success
+        localStorage.setItem('analysisResult', JSON.stringify({
+          ...response.data,
+          alias: response.data.alias || 'Análisis de correo'
+        }));
+        window.location.href = '/results';
+        return;
+      }
     }
 
-    // Continue polling if no result
+    // Continue polling if no result or invalid response
     setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
   } catch (error) {
     logger.log('error', 'Polling error', { error, retryCount });
