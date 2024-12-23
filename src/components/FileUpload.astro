@@ -4,7 +4,7 @@
   <input
     type="file"
     id="fileInput"
-    accept=".eml,.jpg,.jpeg,.png"
+    accept=".eml,.jpg,.jpeg,.png,.txt"
     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
   />
   <div class="space-y-4">
@@ -16,11 +16,8 @@
         Haz click aquí para seleccionar archivos o arrástralos a esta zona
       </p>
       <p class="text-sm text-gray-500">
-        Puedes subir una imagen del correo o directamente el correo en formato .eml
+        Puedes subir una imagen (.jpg, .jpeg, .png) o un correo en formato .eml
       </p>
-    </div>
-    <div class="text-xs text-gray-500 mt-2 italic">
-      (puedes exportar tus correos en este formato pulsando sobre el icono de 3 puntos que encontrarás junto al correo que quieras analizar y pulsando sobre "Descargar mensaje" o "Guardar como")
     </div>
   </div>
 </div>
@@ -37,4 +34,5 @@
       Eliminar
     </button>
   </div>
+  <div id="filePreviewImage" class="mt-4 flex justify-center"></div>
 </div>
