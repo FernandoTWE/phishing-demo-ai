@@ -1,27 +1,26 @@
-import { convertFileToBase64 } from './fileHandlers';
 import { sendAnalysis } from '../services/apiService';
 import { pollResults } from '../services/resultService';
 import { getContentType } from './contentType';
 import type { AnalysisFormData, AnalysisPayload } from '../types/analysis';
 
-async function createAnalysisPayload(formData: AnalysisFormData, requestId: string): Promise<AnalysisPayload> {
-  let content = '';
-  let contentType = formData.file ? getContentType(formData.file) : 'message';
+async function createAnalysisPayload(formData: AnalysisFormData, requestId: string): Promise<FormData> {
+  const payload = new FormData();
+  const contentType = formData.file ? getContentType(formData.file) : { type: 'message', mimeType: 'text/plain' };
+
+  payload.append('requestId', requestId);
+  payload.append('language', formData.language);
+  payload.append('segment', formData.segment);
+  payload.append('contentType', contentType.type);
+  payload.append('mimeType', contentType.mimeType);
+  payload.append('contextType', '');
 
   if (formData.file) {
-    content = await convertFileToBase64(formData.file);
+    payload.append('file', formData.file);
   } else if (formData.text) {
-    content = btoa(formData.text);
+    payload.append('text', formData.text);
   }
 
-  return {
-    text: content,
-    requestId,
-    language: formData.language,
-    segment: formData.segment,
-    contentType,
-    contextType: ''
-  };
+  return payload;
 }
 
 export async function handleAnalysisSubmission(formData: AnalysisFormData): Promise<void> {

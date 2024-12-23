@@ -1,5 +1,4 @@
 import { API_CONFIG } from '../config/api';
-import type { AnalysisPayload } from '../types/analysis';
 
 export class ApiError extends Error {
   constructor(message: string, public status?: number) {
@@ -8,15 +7,11 @@ export class ApiError extends Error {
   }
 }
 
-export async function sendAnalysis(payload: AnalysisPayload): Promise<Response> {
+export async function sendAnalysis(payload: FormData): Promise<Response> {
   try {
     const response = await fetch(API_CONFIG.ENDPOINTS.WEBHOOK, {
       method: 'POST',
-      headers: API_CONFIG.HEADERS,
-      body: JSON.stringify({
-        ...payload,
-        contentType: payload.contentType === 'image' ? 'image' : 'message/rfc822'
-      })
+      body: payload // Send FormData directly
     });
 
     if (!response.ok) {

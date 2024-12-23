@@ -11,6 +11,7 @@ export interface AnalysisPayload {
   language: string;
   segment: string;
   contentType: string;
+  mimeType: string;
   contextType: string;
 }
 
