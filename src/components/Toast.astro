@@ -2,7 +2,7 @@
 ---
 <div 
   id="toast" 
-  class="fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-y-full opacity-0"
+  class="fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg transform transition-all duration-300 translate-y-full opacity-0 z-50"
   role="alert"
 >
   <div class="flex items-center space-x-3">
@@ -14,7 +14,7 @@
 <script>
   let timeoutId: number;
 
-  export function showToast(message: string, type: 'success' | 'error' = 'success') {
+  function showToast(message: string, type: 'success' | 'error' = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
@@ -27,15 +27,16 @@
     }
 
     // Set styles based on type
+    const baseClasses = 'fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg';
     if (type === 'success') {
-      toast.className = 'fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg bg-green-50 text-green-800';
+      toast.className = `${baseClasses} bg-green-50 text-green-800`;
       toastIcon.innerHTML = `
         <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
         </svg>
       `;
     } else {
-      toast.className = 'fixed bottom-4 right-4 px-6 py-4 rounded-lg shadow-lg bg-red-50 text-red-800';
+      toast.className = `${baseClasses} bg-red-50 text-red-800`;
       toastIcon.innerHTML = `
         <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
@@ -51,6 +52,12 @@
       toast.classList.add('translate-y-full', 'opacity-0');
     }, 5000);
   }
+
+  // Listen for custom toast events
+  window.addEventListener('showToast', ((event: CustomEvent) => {
+    const { message, type } = event.detail;
+    showToast(message, type);
+  }) as EventListener);
 
   // Make showToast available globally
   window.showToast = showToast;

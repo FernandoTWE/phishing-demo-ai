@@ -1,7 +1,8 @@
 import { ApiError } from './apiErrorHandler';
 import { logger } from './logger';
+import type { ApiResponse } from '../types/api';
 
-export function validateApiResponse(response: Response): ApiError | null {
+export function validateApiResponse<T>(response: Response): ApiResponse<T> | ApiError {
   logger.log('info', 'Validating API response', { 
     status: response.status 
   });
@@ -22,5 +23,8 @@ export function validateApiResponse(response: Response): ApiError | null {
     );
   }
 
-  return null;
+  return {
+    status: 'success',
+    data: response as unknown as T
+  };
 }

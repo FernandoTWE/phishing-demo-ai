@@ -1,87 +1,40 @@
-import { API_CONFIG } from '../config/api';
+import { PollingService } from './polling/pollingService';
+import { fetchAnalysisResult } from './analysisService';
 import { logger } from '../utils/logger';
 import type { AnalysisResult } from '../types/analysis';
 
-const POLL_INTERVAL = 10000; // 10 seconds
-const MAX_RETRIES = 30; // 5 minutes total
-
-interface ApiResponse {
-  status: 'success' | 'error' | 'pending';
-  message?: string;
-  data?: AnalysisResult;
-}
-
-export async function checkResults(requestId: string): Promise<ApiResponse | null> {
-  try {
-    const response = await fetch(`${API_CONFIG.ENDPOINTS.ANALYSIS_RESULT}?requestId=${requestId}`);
-    
-    if (!response.ok) {
-      logger.log('error', 'API error', { status: response.status });
-      return null;
-    }
-    
-    const result = await response.json();
-    
-    // If no result or empty object, consider it pending
-    if (!result || Object.keys(result).length === 0) {
-      return { status: 'pending' };
-    }
-
-    logger.log('info', 'Results received', { result });
-    return result;
-  } catch (error) {
-    logger.log('error', 'Results check failed', { error });
-    return null;
-  }
-}
-
-export async function pollResults(requestId: string, retryCount = 0): Promise<void> {
+export async function pollResults(requestId: string): Promise<void> {
   const loadingOverlay = document.getElementById('loadingOverlay');
   
-  if (retryCount >= MAX_RETRIES) {
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-    window.showToast('El análisis está tardando más de lo esperado', 'error');
-    return;
-  }
+  const pollingService = new PollingService(async () => {
+    try {
+      const response = await fetchAnalysisResult(requestId);
+      return response;
+    } catch (error) {
+      logger.log('error', 'Error in polling check', { error });
+      return {
+        status: 'error',
+        message: 'Error al verificar el estado del análisis'
+      };
+    }
+  });
 
   try {
-    const response = await checkResults(requestId);
-    
-    if (response) {
-      switch (response.status) {
-        case 'success':
-          if (response.data) {
-            // Store result and redirect on success
-            localStorage.setItem('analysisResult', JSON.stringify({
-              ...response.data,
-              alias: response.data.alias || 'Análisis de correo'
-            }));
-            
-            // Hide loading overlay and redirect
-            if (loadingOverlay) loadingOverlay.classList.add('hidden');
-            window.location.href = '/results';
-            return;
-          }
-          break;
+    const result = await pollingService.start();
 
-        case 'error':
-          // Hide loading and show error message
-          if (loadingOverlay) loadingOverlay.classList.add('hidden');
-          window.showToast(response.message || 'Error en el análisis', 'error');
-          return;
-
-        case 'pending':
-          // Continue polling
-          setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
-          break;
-      }
-    } else {
-      // On null response (API error), continue polling
-      setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
+    if (result.status === 'success' && result.data) {
+      localStorage.setItem('analysisResult', JSON.stringify(result.data));
+      if (loadingOverlay) loadingOverlay.classList.add('hidden');
+      window.location.href = '/results';
+      return;
     }
+
+    // Mostrar el mensaje de error exacto recibido
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    window.showToast(result.message || 'Error al obtener los resultados', 'error');
   } catch (error) {
-    logger.log('error', 'Polling error', { error, retryCount });
-    // On error, continue polling
-    setTimeout(() => pollResults(requestId, retryCount + 1), POLL_INTERVAL);
+    logger.log('error', 'Polling failed', { error });
+    if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    window.showToast('Error al obtener los resultados', 'error');
   }
 }

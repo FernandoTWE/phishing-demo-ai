@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import RiskMeter from '../components/results/RiskMeter.astro';
 import AnalysisCard from '../components/results/AnalysisCard.astro';
 import RecommendationGrid from '../components/results/RecommendationGrid.astro';
+import Toast from '../components/Toast.astro';
 ---
 
 <Layout title="Resultados del Análisis">
@@ -31,11 +32,13 @@ import RecommendationGrid from '../components/results/RecommendationGrid.astro';
       </div>
     </div>
   </main>
+  <Toast />
 </Layout>
 
 <script>
   import { displayAnalysisResults } from '../utils/resultsRenderer';
   import { fetchAnalysisResult } from '../services/analysisService';
+  import { logger } from '../utils/logger';
 
   async function loadResults() {
     const container = document.getElementById('resultsContainer');
@@ -45,29 +48,45 @@ import RecommendationGrid from '../components/results/RecommendationGrid.astro';
       // Check if we're coming from history view
       const selectedAnalysisId = localStorage.getItem('selectedAnalysisId');
       if (selectedAnalysisId) {
+        logger.log('info', 'Loading analysis from history', { selectedAnalysisId });
         const result = await fetchAnalysisResult(selectedAnalysisId);
-        if (result) {
-          displayAnalysisResults(result, container);
-          // Clear the selected analysis ID after loading
+        
+        if (result?.status === 'success' && result.data) {
+          displayAnalysisResults(result.data, container);
           localStorage.removeItem('selectedAnalysisId');
           return;
         }
       }
 
-      // If no selected analysis or it failed to load, try loading from analysisResult
+      // Try loading from analysisResult
       const resultData = localStorage.getItem('analysisResult');
       if (resultData) {
-        displayAnalysisResults(JSON.parse(resultData), container);
-      } else {
-        window.location.href = '/';
+        try {
+          const parsedData = JSON.parse(resultData);
+          if (parsedData) {
+            displayAnalysisResults(parsedData, container);
+            return;
+          }
+        } catch (error) {
+          logger.log('error', 'Error parsing stored result', { error });
+        }
       }
+
+      // If no valid data found, show error and redirect
+      window.showToast('No se encontraron resultados para mostrar', 'error');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 3000);
     } catch (error) {
-      console.error('Error loading results:', error);
+      logger.log('error', 'Error loading results', { error });
       container.innerHTML = `
         <div class="bg-white rounded-xl shadow-lg p-6">
-          <p class="text-red-600">Error al cargar los resultados. Por favor, intenta nuevamente.</p>
+          <p class="text-red-600">Error al cargar los resultados. Serás redirigido al inicio en unos segundos.</p>
         </div>
       `;
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 3000);
     }
   }
 

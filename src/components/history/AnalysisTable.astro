@@ -1,5 +1,7 @@
 ---
+import { fetchAnalysisHistory } from '../../services/analysis';
 ---
+
 <div class="bg-white shadow-xl rounded-lg overflow-hidden">
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200">
@@ -19,7 +21,7 @@
 </div>
 
 <script>
-  import { fetchAnalysisHistory } from '../../services/analysisService';
+  import { fetchAnalysisHistory } from '../../services/analysis';
   import { getRiskBadgeClass } from '../../utils/riskUtils';
   import { formatDate } from '../../utils/dateUtils';
 
@@ -30,10 +32,18 @@
     try {
       const history = await fetchAnalysisHistory();
       
-      // Filter only successful analyses
-      const successfulAnalyses = history.filter(item => item.status === 'success');
+      if (history.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+              No hay análisis disponibles
+            </td>
+          </tr>
+        `;
+        return;
+      }
       
-      tableBody.innerHTML = successfulAnalyses.map((item) => `
+      tableBody.innerHTML = history.map((item) => `
         <tr>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             ${formatDate(item.created_at)}
@@ -42,8 +52,8 @@
             ${item.alias || 'Sin nombre'}
           </td>
           <td class="px-6 py-4 whitespace-nowrap">
-            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRiskBadgeClass(item.riskPhishing.totalRiskScore)}">
-              ${item.riskPhishing.totalRiskScore.toFixed(1)} - ${item.riskPhishing.riskLevel}
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getRiskBadgeClass(item.riskPhishing?.totalRiskScore || 0)}">
+              ${item.riskPhishing?.totalRiskScore.toFixed(1)} - ${item.riskPhishing?.riskLevel}
             </span>
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm">

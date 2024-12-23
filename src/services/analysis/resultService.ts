@@ -1,6 +1,6 @@
-import { getAnalysisResultUrl } from '../config/api';
-import { logger } from '../utils/logger';
-import type { PollingResult } from './polling/types';
+import { getAnalysisResultUrl } from '../../config/api';
+import { logger } from '../../utils/logger';
+import type { PollingResult } from '../polling/types';
 
 export async function fetchAnalysisResult(requestId: string): Promise<PollingResult<any>> {
   try {
@@ -15,7 +15,7 @@ export async function fetchAnalysisResult(requestId: string): Promise<PollingRes
     }
     
     // Si no es 200, es un error que debería detener el polling
-    if (!response.status === 200) {
+    if (response.status !== 200) {
       return {
         status: 'error',
         message: 'Error al obtener los resultados'

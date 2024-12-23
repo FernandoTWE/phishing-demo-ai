@@ -42,7 +42,6 @@ import Toast from '../components/Toast.astro';
       </div>
     </div>
   </main>
-  
   <LoadingState />
   <Toast />
 </Layout>
@@ -61,6 +60,7 @@ import Toast from '../components/Toast.astro';
     const fileName = document.getElementById('fileName') as HTMLElement;
     const textInput = document.getElementById('textInput') as HTMLTextAreaElement;
     const removeFileBtn = document.getElementById('removeFile');
+    const charCount = document.getElementById('charCount');
     
     let selectedFile: File | null = null;
 
@@ -89,7 +89,6 @@ import Toast from '../components/Toast.astro';
     // Handle text input character count
     textInput?.addEventListener('input', (e) => {
       const target = e.target as HTMLTextAreaElement;
-      const charCount = document.getElementById('charCount');
       if (charCount) {
         charCount.textContent = `${target.value.length}/4000 caracteres`;
       }
