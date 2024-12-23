@@ -49,6 +49,7 @@ import SegmentSelector from '../components/SegmentSelector.astro';
   import { validateForm } from '../utils/formValidation';
   import { handleFileSelection, removeSelectedFile } from '../utils/fileHandlers';
   import type { AnalysisFormData } from '../types/analysis';
+  import type { FileHandlerElements } from '../types/fileHandling';
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('analysisForm') as HTMLFormElement;
@@ -60,12 +61,19 @@ import SegmentSelector from '../components/SegmentSelector.astro';
     
     let selectedFile: File | null = null;
 
-    fileInput?.addEventListener('change', (event) => {
-      selectedFile = handleFileSelection(event, fileName, filePreview, textInput);
+    const elements: FileHandlerElements = {
+      fileInput,
+      filePreview,
+      fileName,
+      textInput
+    };
+
+    fileInput?.addEventListener('change', async (event) => {
+      selectedFile = await handleFileSelection(event, elements);
     });
 
     removeFileBtn?.addEventListener('click', () => {
-      selectedFile = removeSelectedFile(fileInput, filePreview, textInput);
+      selectedFile = removeSelectedFile(elements);
     });
 
     form?.addEventListener('submit', async (e) => {

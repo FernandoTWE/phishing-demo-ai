@@ -1,82 +1,60 @@
-import { logger } from './logger';
-import { validateFile } from './fileValidator';
-import { getContentType } from './contentType';
+import { processImageFile } from './imageProcessor';
+import { showError } from './notifications';
+import type { FileHandlerElements } from '../types/fileHandling';
 
 export async function handleFileSelection(
   event: Event,
-  fileNameElement: HTMLElement,
-  filePreviewElement: HTMLElement,
-  textInputElement: HTMLTextAreaElement
+  elements: FileHandlerElements
 ): Promise<File | null> {
   const target = event.target as HTMLInputElement;
   const file = target.files?.[0];
   
   if (!file) {
-    logger.log('warn', 'No file selected');
     return null;
   }
 
-  logger.log('info', 'File selected', { 
-    name: file.name,
-    size: file.size,
-    type: file.type 
-  });
-
-  // Validate file
-  const validation = validateFile(file);
-  if (!validation.isValid) {
-    logger.log('error', 'File validation failed', { error: validation.error });
-    alert(validation.error);
+  if (!isValidFileType(file)) {
+    showError('Solo se permiten archivos .eml, .jpg, .jpeg, .png o .txt');
     return null;
   }
 
   try {
-    // Preview image if it's an image file
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.src = e.target?.result as string;
-        img.className = 'max-h-32 rounded-lg';
-        const previewContainer = document.getElementById('filePreviewImage');
-        if (previewContainer) {
-          previewContainer.innerHTML = '';
-          previewContainer.appendChild(img);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // Update UI
-    fileNameElement.textContent = file.name;
-    filePreviewElement.classList.remove('hidden');
-    textInputElement.value = '';
-    textInputElement.disabled = true;
-
-    logger.log('info', 'File processed successfully');
-    return file;
+    const processedFile = file.type.startsWith('image/') 
+      ? await processImageFile(file)
+      : file;
+    
+    updateUIElements(processedFile, elements);
+    return processedFile;
   } catch (error) {
-    logger.log('error', 'Error processing file', { error });
-    alert('Error al procesar el archivo. Por favor, inténtalo de nuevo.');
+    console.error('Error al procesar el archivo:', error);
+    showError('No se pudo procesar la imagen. Por favor, inténtalo de nuevo.');
     return null;
   }
 }
 
-export function removeSelectedFile(
-  fileInputElement: HTMLInputElement,
-  filePreviewElement: HTMLElement,
-  textInputElement: HTMLTextAreaElement
-): null {
-  logger.log('info', 'Removing selected file');
-  
-  fileInputElement.value = '';
-  filePreviewElement.classList.add('hidden');
-  textInputElement.disabled = false;
-  
-  const previewContainer = document.getElementById('filePreviewImage');
-  if (previewContainer) {
-    previewContainer.innerHTML = '';
-  }
-
+export function removeSelectedFile(elements: FileHandlerElements): null {
+  const { fileInput, filePreview, textInput } = elements;
+  fileInput.value = '';
+  filePreview.classList.add('hidden');
+  textInput.disabled = false;
   return null;
+}
+
+function updateUIElements(
+  file: File,
+  elements: FileHandlerElements
+): void {
+  const { fileName, filePreview, textInput } = elements;
+  fileName.textContent = file.name;
+  filePreview.classList.remove('hidden');
+  textInput.value = '';
+  textInput.disabled = true;
+}
+
+export function isValidFileType(file: File): boolean {
+  const allowedTypes = ['text/plain', 'message/rfc822', 'image/jpeg', 'image/png'];
+  const allowedExtensions = ['.eml', '.txt', '.jpg', '.jpeg', '.png'];
+  
+  const extension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'));
+  return allowedTypes.includes(file.type) || allowedExtensions.includes(extension);
 }

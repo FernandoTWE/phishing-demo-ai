@@ -11,11 +11,11 @@ export async function sendAnalysis(payload: FormData): Promise<Response> {
   try {
     const response = await fetch(API_CONFIG.ENDPOINTS.WEBHOOK, {
       method: 'POST',
-      body: payload // Send FormData directly
+      body: payload
     });
 
     if (!response.ok) {
-      throw new ApiError(`Error al enviar el análisis: ${response.statusText}`, response.status);
+      throw new ApiError(`Error en el servidor: ${response.status} ${response.statusText}`, response.status);
     }
 
     return response;
